@@ -54,9 +54,11 @@ cameraBtn.addEventListener('click', async () => {
 });
 
 // Upload handling
-uploadBtn.addEventListener('click', () => {
-    fileInput.click();
-});
+if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+}
 
 fileInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
