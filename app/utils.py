@@ -1,7 +1,8 @@
 from google import genai
-import PIL.Image
 import os
 from dotenv import load_dotenv
+import pillow_avif
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
