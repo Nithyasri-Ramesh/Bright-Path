@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0e1a">
+    <title>BrightPath - AI Vision Assistant</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ========== GLOBAL RESET ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0e1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(118, 75, 162, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(244, 114, 182, 0.08) 0%, transparent 60%);
+            animation: bgFloat 25s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.02); }
+            66% { transform: translate(-20px, 30px) scale(0.98); }
+        }
+
+        /* Floating Particles */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 30% 60%, rgba(255,255,255,0.15), transparent),
+                radial-gradient(2px 2px at 50% 30%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 70% 70%, rgba(255,255,255,0.15), transparent),
+                radial-gradient(2px 2px at 90% 40%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 15% 80%, rgba(255,255,255,0.1), transparent),
+                radial-gradient(2px 2px at 85% 10%, rgba(255,255,255,0.15), transparent);
+            background-size: 200px 200px;
+            opacity: 0.5;
+            animation: particles 40s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes particles {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-200px); }
+        }
+
+        /* ========== FULL-SCREEN TAP ========== */
+        .fullscreen-tap {
+            position: fixed;
+            inset: 0;
+            z-index: 9997;
+            background: transparent;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .fullscreen-tap .tap-hint {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: white;
+            padding: 20px 36px;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 90%;
+            letter-spacing: 0.3px;
+        }
+
+        .fullscreen-tap .tap-hint.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .fullscreen-tap .tap-hint .icon {
+            display: block;
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .fullscreen-tap .tap-hint .sub-hint {
+            display: block;
+            font-size: 14px;
+            opacity: 0.5;
+            margin-top: 4px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========== RIPPLE EFFECT ========== */
+        .tap-ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.2));
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0);
+            animation: rippleAnim 0.8s ease-out forwards;
+            z-index: 9998;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+        }
+
+        @keyframes rippleAnim {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(6); opacity: 0; }
+        }
+
+        /* ========== CAMERA OVERLAY ========== */
+        .camera-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.97);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        .camera-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .camera-overlay video {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 20px;
+            object-fit: cover;
+            pointer-events: none;
+            box-shadow: 0 0 80px rgba(102, 126, 234, 0.1);
+        }
+
+        .camera-overlay .close-camera {
+            position: absolute;
+            top: 30px;
+            right: 20px;
+            color: white;
+            font-size: 22px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 14px 18px;
+            touch-action: manipulation;
+            z-index: 10000;
+            transition: all 0.3s ease;
+            min-width: 56px;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .camera-overlay .close-camera:active {
+            transform: scale(0.9);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .camera-overlay .camera-hint {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 20px;
+            font-weight: 500;
+            text-align: center;
+            pointer-events: none;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 14px 28px;
+            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            animation: pulseHint 2.5s ease-in-out infinite;
+            max-width: 90%;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.03); }
+        }
+
+        .camera-tap-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0);
+            animation: cameraRipple 0.6s ease-out forwards;
+            z-index: 99999;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes cameraRipple {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+        }
+
+        /* ========== MAIN CONTAINER ========== */
+        .container {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(17, 24, 39, 0.92);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 32px;
+            padding: 28px 24px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Glowing border effect */
+        .container::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 32px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.2), rgba(244, 114, 182, 0.1));
+            z-index: -1;
+            opacity: 0.5;
+            animation: borderGlow 6s ease-in-out infinite;
+            background-size: 300% 300%;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { background-position: 0% 50%; opacity: 0.3; }
+            50% { background-position: 100% 50%; opacity: 0.6; }
+        }
+
+        /* ========== HEADER ========== */
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .logo .icon-wrapper {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 8px 60px rgba(102, 126, 234, 0.5); }
+        }
+
+        .logo h1 {
+            font-size: 30px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 400;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+        }
+
+        /* ========== IMAGE PREVIEW ========== */
+        .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 50vh;
+            min-height: 280px;
+            background: rgba(10, 14, 26, 0.6);
+            border-radius: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .image-preview.has-image {
+            border-style: solid;
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 0 60px rgba(96, 165, 250, 0.05);
+            background: rgba(10, 14, 26, 0.8);
+        }
+
+        .image-preview .placeholder {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .image-preview .placeholder .camera-icon {
+            font-size: 72px;
+            display: block;
+            margin-bottom: 16px;
+            animation: floatIcon 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 40px rgba(102, 126, 234, 0.2));
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-12px) scale(1.05); }
+        }
+
+        .image-preview .placeholder p {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+        }
+
+        .image-preview .placeholder small {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* ========== QUICK TIP ========== */
+        .quick-tips {
+            margin-top: 16px;
+            padding: 14px 20px;
+            background: rgba(96, 165, 250, 0.06);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #93bbfc;
+            border: 1px solid rgba(96, 165, 250, 0.06);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-tips i {
+            font-size: 20px;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            color: #60a5fa;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* ========== STATUS ========== */
+        .status {
+            margin-top: 16px;
+            padding: 20px 24px;
+            background: rgba(10, 14, 26, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+        }
+
+        .status.hidden {
+            display: none;
+        }
+
+        .status-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top: 3px solid #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+            box-shadow: 0 0 40px rgba(96, 165, 250, 0.1);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-text h4 {
+            font-size: 15px;
+            color: #e2e8f0;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .status-text p {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* ========== DESCRIPTION ========== */
+        .description-container {
+            margin-top: 16px;
+            padding: 20px 24px;
+            background: rgba(10, 14, 26, 0.6);
+            border-radius: 16px;
+            border-left: 4px solid #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.06);
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .description-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .description-header h3 {
+            font-size: 15px;
+            color: #e2e8f0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .description-header h3 span {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-text {
+            background: rgba(96, 165, 250, 0.08);
+            border: 1px solid rgba(96, 165, 250, 0.1);
+            color: #60a5fa;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 18px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-text:active {
+            background: rgba(96, 165, 250, 0.15);
+            transform: scale(0.95);
+        }
+
+        .description-content {
+            color: #e2e8f0;
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 4px 0;
+            font-weight: 400;
+        }
+
+        .description-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #475569;
+            font-weight: 400;
+        }
+
+        /* ========== ERROR ========== */
+        .error-container {
+            margin-top: 16px;
+            padding: 16px 20px;
+            background: rgba(239, 68, 68, 0.04);
+            border-radius: 16px;
+            border-left: 4px solid #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.08);
+            display: none;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .error-text {
+            font-size: 14px;
+            color: #fca5a5;
+        }
+
+        /* ========== LOADING OVERLAY ========== */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 14, 26, 0.97);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+
+        .pulse-ring {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .pulse-ring-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top-color: #60a5fa;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 80px rgba(96, 165, 250, 0.1);
+        }
+
+        .pulse-ring::before,
+        .pulse-ring::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            animation: pulseNeon 2.5s ease-out infinite;
+        }
+
+        .pulse-ring::after {
+            animation-delay: 1.25s;
+        }
+
+        @keyframes pulseNeon {
+            0% { transform: scale(1); opacity: 0.3; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .loading-content h3 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .loading-content p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            margin: 20px auto 0;
+            overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+            border-radius: 4px;
+            animation: loadingBar 2s ease-in-out infinite;
+            width: 0%;
+        }
+
+        @keyframes loadingBar {
+            0% { width: 0%; transform: translateX(-100%); }
+            50% { width: 70%; transform: translateX(0%); }
+            100% { width: 100%; transform: translateX(100%); }
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .footer-content p {
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .footer-content p i {
+            color: #f472b6;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 4px;
+        }
+
+        .tech-stack span {
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 20px 16px;
+                border-radius: 24px;
+                min-height: 95vh;
+            }
+
+            .image-preview {
+                height: 45vh;
+                min-height: 220px;
+            }
+
+            .image-preview .placeholder .camera-icon {
+                font-size: 56px;
+            }
+
+            .image-preview .placeholder p {
+                font-size: 18px;
+            }
+
+            .logo h1 {
+                font-size: 26px;
+            }
+
+            .logo .icon-wrapper {
+                width: 44px;
+                height: 44px;
+                font-size: 22px;
+            }
+
+            .fullscreen-tap .tap-hint {
+                bottom: 100px;
+                font-size: 17px;
+                padding: 16px 28px;
+                max-width: 92%;
+            }
+
+            .fullscreen-tap .tap-hint .icon {
+                font-size: 36px;
+            }
+
+            .camera-overlay .camera-hint {
+                bottom: 110px;
+                font-size: 17px;
+                padding: 12px 24px;
+                max-width: 92%;
+            }
+
+            .camera-overlay .close-camera {
+                top: 20px;
+                right: 15px;
+                font-size: 18px;
+                padding: 12px 16px;
+                min-width: 50px;
+                min-height: 50px;
+            }
+
+            .quick-tips {
+                font-size: 13px;
+                padding: 12px 16px;
+            }
+
+            .description-content {
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                padding: 16px 12px;
+                border-radius: 20px;
+                min-height: 98vh;
+            }
+
+            .image-preview {
+                height: 40vh;
+                min-height: 180px;
+            }
+
+            .image-preview .placeholder .camera-icon {
+                font-size: 44px;
+            }
+
+            .image-preview .placeholder p {
+                font-size: 16px;
+            }
+
+            .logo h1 {
+                font-size: 22px;
+            }
+
+            .logo .icon-wrapper {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+            }
+
+            .fullscreen-tap .tap-hint {
+                bottom: 80px;
+                font-size: 14px;
+                padding: 14px 20px;
+            }
+
+            .fullscreen-tap .tap-hint .icon {
+                font-size: 28px;
+            }
+
+            .camera-overlay .camera-hint {
+                bottom: 90px;
+                font-size: 14px;
+                padding: 10px 18px;
+            }
+
+            .camera-overlay .close-camera {
+                top: 15px;
+                right: 12px;
+                font-size: 16px;
+                padding: 10px 14px;
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            .quick-tips {
+                font-size: 12px;
+                padding: 10px 14px;
+                gap: 8px;
+            }
+
+            .quick-tips i {
+                font-size: 16px;
+            }
+
+            .description-content {
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .description-header h3 {
+                font-size: 13px;
+            }
+
+            .btn-text {
+                font-size: 12px;
+                padding: 6px 14px;
+                min-height: 38px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+        }
+
+        /* Landscape mode */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .image-preview {
+                height: 35vh;
+                min-height: 140px;
+            }
+
+            .container {
+                min-height: 96vh;
+            }
+
+            .camera-overlay video {
+                max-height: 65vh;
+            }
+
+            .camera-overlay .camera-hint {
+                bottom: 70px;
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+
+        /* Prevent zoom */
+        button, .fullscreen-tap, .camera-overlay {
+            touch-action: manipulation;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(96, 165, 250, 0.2);
+            border-radius: 10px;
+        }
+
+        /* Selection */
+        ::selection {
+            background: rgba(96, 165, 250, 0.2);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Full-Screen Tap Overlay -->
+    <div class="fullscreen-tap" id="fullscreenTap">
+        <div class="tap-hint" id="tapHint">
+            <span class="icon">👆</span>
+            Tap anywhere to take a photo
+            <span class="sub-hint">No buttons — just tap the screen</span>
+        </div>
+    </div>
+
+    <!-- Camera Overlay -->
+    <div class="camera-overlay" id="cameraOverlay">
+        <button class="close-camera" id="closeCameraBtn">✕</button>
+        <video id="cameraVideo" autoplay playsinline></video>
+        <div class="camera-hint" id="cameraHint">👆 Tap anywhere to capture</div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="pulse-ring">
+                <div class="pulse-ring-inner"></div>
+            </div>
+            <h3>Processing Image</h3>
+            <p id="loadingMessage">AI is analyzing what's in your photo...</p>
+            <div class="loading-bar">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <div class="icon-wrapper">🌟</div>
+                <h1>BrightPath</h1>
+            </div>
+            <p class="subtitle">AI Vision Assistant for the Visually Impaired</p>
+        </header>
+
+        <!-- Main Card -->
+        <div class="card">
+            <!-- Image Preview -->
+            <div class="image-preview" id="imagePreview">
+                <div class="placeholder" id="placeholder">
+                    <span class="camera-icon">📷</span>
+                    <p>Tap anywhere on screen</p>
+                    <small>to capture a photo</small>
+                </div>
+                <img id="previewImage" style="display: none;" alt="Uploaded image">
+            </div>
+
+            <!-- Quick Tip -->
+            <div class="quick-tips" id="quickTips">
+                <i class="fas fa-hand-pointer"></i>
+                Tap anywhere on the screen to take a photo
+            </div>
+
+            <!-- Analysis Status -->
+            <div id="status" class="status hidden">
+                <div class="status-content">
+                    <div class="spinner"></div>
+                    <div class="status-text">
+                        <h4>Analyzing...</h4>
+                        <p id="statusMessage">Processing your image</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description Display -->
+            <div class="description-container" id="descriptionContainer" style="display: none;">
+                <div class="description-header">
+                    <h3>🤖 <span>AI Description</span></h3>
+                    <button class="btn-text" id="speakBtn">
+                        <i class="fas fa-volume-up"></i> Listen
+                    </button>
+                </div>
+                <div class="description-content" id="descriptionText"></div>
+                <div class="description-footer">
+                    <span class="timestamp" id="timestamp"></span>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div class="error-container" id="errorContainer">
+                <p class="error-text" id="errorText"></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <p>Made with <i class="fas fa-heart"></i> for the visually impaired community</p>
+                <div class="tech-stack">
+                    <span><i class="fas fa-robot"></i> Gemini AI</span>
+                    <span><i class="fas fa-microphone"></i> Web Speech</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+    <script>
+        // ========== MOBILE-FIRST FULL-SCREEN TAP ==========
+        (function() {
+            const fullscreenTap = document.getElementById('fullscreenTap');
+            const tapHint = document.getElementById('tapHint');
+            const cameraOverlay = document.getElementById('cameraOverlay');
+            const cameraHint = document.getElementById('cameraHint');
+            const video = document.getElementById('cameraVideo');
+            const closeCameraBtn = document.getElementById('closeCameraBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const fileInput = document.getElementById('fileInput');
+            
+            let stream = null;
+            let isCameraOpen = false;
+            
+            // Show tap hint
+            setTimeout(() => {
+                tapHint.classList.add('show');
+            }, 1000);
+            
+            setTimeout(() => {
+                tapHint.classList.remove('show');
+            }, 6000);
+            
+            // Ripple effects
+            function createRipple(x, y) {
+                const ripple = document.createElement('div');
+                ripple.className = 'tap-ripple';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.style.width = '60px';
+                ripple.style.height = '60px';
+                document.body.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 800);
+            }
+            
+            function createCameraRipple(x, y) {
+                const ripple = document.createElement('div');
+                ripple.className = 'camera-tap-ripple';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.style.width = '80px';
+                ripple.style.height = '80px';
+                cameraOverlay.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+            
+            // Audio feedback
+            function playBeep() {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 880;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } catch(e) {}
+            }
+            
+            function announce(msg) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(msg);
+                    u.rate = 0.9;
+                    u.pitch = 1;
+                    window.speechSynthesis.speak(u);
+                }
+            }
+            
+            // Handle taps
+            function handleFullScreenTap(e) {
+                e.preventDefault();
+                const x = e.touches?.[0]?.clientX || e.clientX || window.innerWidth/2;
+                const y = e.touches?.[0]?.clientY || e.clientY || window.innerHeight/2;
+                createRipple(x, y);
+                playBeep();
+                announce('Opening camera');
+                openCamera();
+            }
+            
+            function handleCameraTap(e) {
+                if (!isCameraOpen) return;
+                e.preventDefault();
+                const x = e.touches?.[0]?.clientX || e.clientX || window.innerWidth/2;
+                const y = e.touches?.[0]?.clientY || e.clientY || window.innerHeight/2;
+                createCameraRipple(x, y);
+                playBeep();
+                announce('Capturing');
+                setTimeout(capturePhoto, 200);
+            }
+            
+            // Camera functions
+            async function openCamera() {
+                if (isCameraOpen) return;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    cameraOverlay.classList.add('active');
+                    isCameraOpen = true;
+                    tapHint.classList.remove('show');
+                } catch(err) {
+                    announce('Camera error');
+                    showError('Camera access denied. Please allow camera permissions.');
+                }
+            }
+            
+            function capturePhoto() {
+                if (!stream || !isCameraOpen) return;
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 1280;
+                canvas.height = video.videoHeight || 720;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+                        closeCamera();
+                        loadingOverlay.classList.add('active');
+                        loadingMessage.textContent = 'AI is analyzing your image...';
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        fileInput.files = dt.files;
+                        fileInput.dispatchEvent(new Event('change'));
+                    }
+                }, 'image/jpeg', 0.95);
+            }
+            
+            function closeCamera() {
+                if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+                cameraOverlay.classList.remove('active');
+                isCameraOpen = false;
+            }
+            
+            function showError(msg) {
+                const ec = document.getElementById('errorContainer');
+                const et = document.getElementById('errorText');
+                et.textContent = msg;
+                ec.style.display = 'flex';
+                setTimeout(() => ec.style.display = 'none', 6000);
+            }
+            
+            // Event listeners
+            fullscreenTap.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+            fullscreenTap.addEventListener('touchend', e => {
+                e.preventDefault();
+                const t = e.changedTouches[0];
+                handleFullScreenTap({ touches: [{ clientX: t.clientX, clientY: t.clientY }], preventDefault: () => {} });
+            }, { passive: false });
+            fullscreenTap.addEventListener('click', e => { if (!('ontouchstart' in window)) handleFullScreenTap(e); });
+            
+            cameraOverlay.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+            cameraOverlay.addEventListener('touchend', e => {
+                e.preventDefault();
+                const t = e.changedTouches[0];
+                handleCameraTap({ touches: [{ clientX: t.clientX, clientY: t.clientY }], preventDefault: () => {} });
+            }, { passive: false });
+            cameraOverlay.addEventListener('click', e => { if (!('ontouchstart' in window)) handleCameraTap(e); });
+            
+            closeCameraBtn.addEventListener('click', closeCamera);
+            closeCameraBtn.addEventListener('touchstart', closeCamera, { passive: true });
+            
+            console.log('🌟 BrightPath: Beautiful UX ready!');
+            console.log('👆 Tap anywhere to capture photos.');
+        })();
+    </script>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
